@@ -1,4 +1,4 @@
-LAP_ADDR       = 0x60
+LAP_ADDR       = 0x61
 
 OBJ            = main.o can/can.o can/spi.o can_handler.o dimmer.o
 
@@ -18,7 +18,7 @@ LDFLAGS        = -Wl,-Map,$(OUT).map,--relax,--gc-sections,--print-gc-sections
 OBJCOPY       ?= avr-objcopy
 OBJDUMP       ?= avr-objdump
 FLASHCMD      ?= avrdude -p $(MCU_TARGET) -U $(OUT).hex
-CANFLASHCMD    = lapcontrol -s wl flash $(LAP_ADDR) $(OUT).hex
+CANFLASHCMD    = ../../labcontrol/lapcontrol -s wl flash $(LAP_ADDR) $(OUT).hex
 
 #############################################################################
 # Rules
