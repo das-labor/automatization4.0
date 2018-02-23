@@ -7,6 +7,7 @@
 #include "can/lap.h"
 #include "config.h"
 
+#include "channel.h"
 #include "dimmer.h"
 
 uint8_t myaddr;
@@ -15,8 +16,6 @@ static void virt_pwm_set_all(uint8_t val)
 {
 	set_dimmer(0, val);
 	set_dimmer(1, val);
-	set_dimmer(2, val);
-	set_dimmer(3, val);
 }
 
 
@@ -71,7 +70,7 @@ void can_handler()
 					}
 					break;
 				case 2:	// Port 2 for lamp control
-					if (rx_msg->data[1] >= NUM_DIMMER_CHANNELS)	// skip if lamp index out of range
+					if (rx_msg->data[1] >= NUM_TOTAL_CHANNELS)	// skip if lamp index out of range
 						return;
 
 					switch (rx_msg->data[0]) {
@@ -81,6 +80,8 @@ void can_handler()
 							break;
 
 						case 1: // Lamp brightness
+							if (rx_msg->data[1] >= NUM_DIMMER_CHANNELS)
+								break;
 							set_dimmer(rx_msg->data[1], rx_msg->data[2]);
 							can_send_status();
 							break;
@@ -90,10 +91,10 @@ void can_handler()
 							break;
 
 						case 3: // All Lamp ON/OFF
-							enable_channel(0, rx_msg->data[2]);
-							enable_channel(1, rx_msg->data[2]);
-							enable_channel(2, rx_msg->data[2]);
-							enable_channel(3, rx_msg->data[2]);
+							for (uint8_t i = 0; i < NUM_TOTAL_CHANNELS; i++)
+							{
+								enable_channel(i, rx_msg->data[2]);
+							}
 							can_send_status();
 							break;
 
@@ -105,8 +106,6 @@ void can_handler()
 						case 5: // set all bright diff
 							set_dimmer(0, rx_msg->data[2]);
 							set_dimmer(1, rx_msg->data[3]);
-							set_dimmer(2, rx_msg->data[4]);
-							set_dimmer(3, rx_msg->data[5]);
 							can_send_status();
 							break;
 
@@ -128,12 +127,10 @@ void can_send_status()
 	msg->port_src = 0x03;
 	msg->addr_dst = 0x00;
 	msg->port_dst = 0x00;
-	msg->dlc = 5;
-	msg->data[0] = get_channel_status();
+	msg->dlc = 3;
+	msg->data[0] = (uint8_t) get_channel_status();
 	msg->data[1] = dim_vals_8bit[0];
 	msg->data[2] = dim_vals_8bit[1];
-	msg->data[3] = dim_vals_8bit[2];
-	msg->data[4] = dim_vals_8bit[3];
 	can_transmit(msg);
 }
 
