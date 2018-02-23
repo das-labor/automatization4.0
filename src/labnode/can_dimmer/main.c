@@ -9,7 +9,7 @@
 #include "can_handler.h"
 #include "can/spi.h"
 #include "can/lap.h"
-
+#include "pcf8574/pcf8574.h"
 
 static void init(void)
 {
@@ -23,6 +23,10 @@ static void init(void)
 
 	channel_init();
 	dimmer_init();
+
+	//init pcf8574
+	pcf8574_init();
+	pcf8574_setoutput(0, 0);
 
 	//enable all channels, set maximum brightness
 	set_dimmer(0, 127);

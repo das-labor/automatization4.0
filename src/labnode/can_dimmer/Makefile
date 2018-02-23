@@ -1,6 +1,6 @@
 LAP_ADDR       = 0x60
 
-OBJ            = main.o can/can.o can/spi.o can_handler.o channel.o dimmer.o
+OBJ            = main.o can/can.o can/spi.o can_handler.o channel.o dimmer.o i2chw/twimaster.o pcf8574/pcf8574.o
 
 # Default values
 OUT           ?= image
@@ -25,7 +25,7 @@ CANFLASHCMD    = ../../labcontrol/lapcontrol -s wl flash $(LAP_ADDR) $(OUT).hex
 all: $(OUT).elf lst text eeprom
 
 clean:
-	rm -rf $(OUT) *.o *.lst *.map *.hex *.bin *.srec can/*.o
+	rm -rf $(OUT) *.o *.lst *.map *.hex *.bin *.srec can/*.o i2chw/*.o pcf8574/*.o
 	rm -rf *.srec $(OUT).elf
 
 flash: $(OUT).hex

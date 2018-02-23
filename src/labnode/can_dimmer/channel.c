@@ -3,6 +3,7 @@
 #include "config.h"
 #include "channel.h"
 #include "dimmer.h"
+#include "pcf8574/pcf8574.h"
 
 volatile uint8_t channels_active[NUM_TOTAL_CHANNELS];
 
@@ -38,7 +39,7 @@ void enable_channel(uint8_t channel, uint8_t enable)
 		}
 		else
 		{
-			// TODO: I2C SWITCH
+			pcf8574_setoutputpin(0, channel - NUM_DIMMER_CHANNELS, enable);
 		}
 	}
 }
