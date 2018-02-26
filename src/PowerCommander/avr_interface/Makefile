@@ -1,6 +1,6 @@
-LAP_ADDR       = 0x60
+LAP_ADDR       = 0x02
 
-OBJ            = main.o can/can.o can/spi.o can_handler.o channel.o dimmer.o i2chw/twimaster.o pcf8574/pcf8574.o
+OBJ = main.o can/can.o can/spi.o can_handler.o twi_master/twi_master.o switch.o i2c_funktionen.o statusled.o virt_lamp.o
 
 # Default values
 OUT           ?= image
@@ -18,14 +18,14 @@ LDFLAGS        = -Wl,-Map,$(OUT).map,--relax,--gc-sections,--print-gc-sections
 OBJCOPY       ?= avr-objcopy
 OBJDUMP       ?= avr-objdump
 FLASHCMD      ?= avrdude -p $(MCU_TARGET) -U $(OUT).hex
-CANFLASHCMD    = ../../labcontrol/lapcontrol -s wl flash $(LAP_ADDR) $(OUT).hex
+CANFLASHCMD    = lapcontrol -s wl flash $(LAP_ADDR) $(OUT).hex
 
 #############################################################################
 # Rules
 all: $(OUT).elf lst text eeprom
 
 clean:
-	rm -rf $(OUT) *.o *.lst *.map *.hex *.bin *.srec can/*.o i2chw/*.o pcf8574/*.o
+	rm -rf $(OUT) *.o *.lst *.map *.hex *.bin *.srec can/*.o twi_master/*.o
 	rm -rf *.srec $(OUT).elf
 
 flash: $(OUT).hex

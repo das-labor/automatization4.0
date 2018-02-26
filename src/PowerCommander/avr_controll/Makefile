@@ -1,38 +1,32 @@
-LAP_ADDR       = 0x60
-
-OBJ            = main.o can/can.o can/spi.o can_handler.o channel.o dimmer.o i2chw/twimaster.o pcf8574/pcf8574.o
+OBJ = main.o twi_slave/twi_slave.o fkt.o pc_init.o
 
 # Default values
 OUT           ?= image
-MCU_TARGET    ?= atmega32
+MCU_TARGET    ?= atmega168
 MCU_CC        ?= avr-gcc
-MCU_AS        ?= avr-as
+MCU_AS	      ?= avr-as
 OPTIMIZE      ?= -Os
 WARNINGS      ?= -Wall -Winline -pedantic -Wstrict-prototypes -Wextra
-DEFS          ?= -DF_CPU=16000000UL -DEEPROM_LAP_ADDR=$(LAP_ADDR)
-CFLAGS        += -mmcu=$(MCU_TARGET) $(OPTIMIZE) $(WARNINGS) $(DEFS) -I. -std=gnu11 -ffunction-sections -fdata-sections -mstrict-X -maccumulate-args
-ASFLAGS       += -mmcu=avr5
-LDFLAGS        = -Wl,-Map,$(OUT).map,--relax,--gc-sections,--print-gc-sections
+DEFS          ?= -DF_CPU=16000000UL
+CFLAGS        += -mmcu=$(MCU_TARGET) $(OPTIMIZE) $(WARNINGS) $(DEFS) -I. -std=gnu99 -ffunction-sections -fdata-sections
+ASFLAGS	      += -mmcu=avr5
+LDFLAGS        = -Wl,-Map,$(OUT).map,--gc-sections,--relax,--print-gc-sections
 
 # External Tools
 OBJCOPY       ?= avr-objcopy
 OBJDUMP       ?= avr-objdump
-FLASHCMD      ?= avrdude -p $(MCU_TARGET) -U $(OUT).hex
-CANFLASHCMD    = ../../labcontrol/lapcontrol -s wl flash $(LAP_ADDR) $(OUT).hex
+FLASHCMD      ?= avrdude -c usbasp -p $(MCU_TARGET) -U $(OUT).hex
 
 #############################################################################
 # Rules
 all: $(OUT).elf lst text eeprom
 
 clean:
-	rm -rf $(OUT) *.o *.lst *.map *.hex *.bin *.srec can/*.o i2chw/*.o pcf8574/*.o
+	rm -rf $(OUT) *.o *.lst *.map *.hex *.bin *.srec twi_slave/*.o
 	rm -rf *.srec $(OUT).elf
 
 flash: $(OUT).hex
 	$(FLASHCMD)
-
-canflash: $(OUT).hex
-	$(CANFLASHCMD)
 
 #############################################################################
 # Building Rules

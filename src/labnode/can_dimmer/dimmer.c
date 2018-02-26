@@ -3,48 +3,10 @@
 #include <avr/pgmspace.h>
 
 #include "config.h"
+#include "channel.h"
 #include "dimmer.h"
 
-/*
-
-Here are some wave forms:
-Keep in mind that the value MAX_VAL is the timer value at Triac
-turn off, thereby dim_val = MAX_VAL-1 is the lowest possible brightnes. This is
-Somewhat different to totally off (which would theoretically be at 625),
-but the Lightbulbs only glow very dimmly with the value 550 as MAX_VAL.
-The highest brightnes is at dim_val = 0 (turning the triac on at about zero cross),
-But the triac is actually turned total on/off for the maximum/minimum input value.
-
-                     * * 
-                   *     *
-                  *       *             *
-                 *         *           *
-Mains ---       *           *         *
-                             *       *
-                              *     *
-                                * *      
-
-ICP
-(Zero cross)  __|___________|___________|__  <- ICP Pulses set timer to 620
-                                                (short before overflow) timer = 0 at zero cross
-Output0       ______________________________
-                      ____        ____
-Output1       _______|    |______|    |_____
-                    ______      ______
-Output2       _____|      |____|      |_____
-              ______________________________
-Output3       
-				          ^           ^
-                          |           |
-                  Triac is turned of at timer == MAX_VAL (550)
-                  for the channels not at max or min
-                  This point is somewhat before the zero cross(which is at 625)
-                  Triac stays on on its own until zero cross. Turning the gate
-                  off before is required, because else it might stay on. 
-
-*/
-
-#define MAX_VAL 550
+#define MAX_VAL 512
 
 volatile uint8_t update_in_progress;
 uint8_t dim_max[NUM_DIMMER_CHANNELS];
@@ -52,8 +14,6 @@ uint8_t dim_max[NUM_DIMMER_CHANNELS];
 uint16_t dim_vals_sorted[NUM_DIMMER_CHANNELS];
 uint8_t channels_sorted[NUM_DIMMER_CHANNELS];
 uint8_t dim_vals_8bit[NUM_DIMMER_CHANNELS];
-
-volatile uint8_t channels_active[NUM_DIMMER_CHANNELS];
 
 //lookuptable for gamma corretion
 static const uint8_t exptab[256] PROGMEM =
@@ -71,14 +31,6 @@ static const uint8_t exptab[256] PROGMEM =
     136, 133, 131, 128, 125, 122, 119, 116, 113, 110, 107, 104, 100, 97, 93, 90, 86, 83, 79, 75, 71, 67, 63, 59, 54, 
     50, 45, 41, 36, 31, 26, 21, 16, 11, 5, 0
 };
-
-//synchronize to zero cross
-ISR(TIMER1_CAPT_vect) {
-	if (channels_active[3])
-		PORTC |= _BV(PC5);	//activate triac on zero-cross(EVG)
-
-	TCNT1 = 620;
-}
 
 ISR(TIMER1_COMPB_vect) {
 	static uint8_t state;
@@ -100,10 +52,8 @@ ISR(TIMER1_COMPB_vect) {
 		}
 		next = 0;
 		//disable all ports that are not always on
-		if (!dim_max[0]) PORTA &= ~_BV(PA4);
-		if (!dim_max[1]) PORTA &= ~_BV(PA5);
-		if (!dim_max[2]) PORTC &= ~_BV(PC4);
-		if (!dim_max[3]) PORTD &= ~_BV(PD5);
+		if (!dim_max[0]) PORTA &= ~_BV(PA6);
+		if (!dim_max[1]) PORTA &= ~_BV(PA7);
 
 		//set next value to interrupt
 		OCR1B = dim_vals[0]; //set timer to the first time an output needs changing
@@ -114,10 +64,8 @@ ISR(TIMER1_COMPB_vect) {
 		//since the dim_vals are sorted, we need to find out the channel,
 		//for which this one is, and set its output.
 		switch (channels[next]) {
-			case 0: if (channels_active[0]) PORTA |= _BV(PA4); break;
-			case 1: if (channels_active[1]) PORTA |= _BV(PA5); break;
-			case 2: if (channels_active[2]) PORTC |= _BV(PC4); break;
-			case 3: if (channels_active[3]) PORTD |= _BV(PD5); break;
+			case 0: if (get_channel_active(8)) PORTA |= _BV(PA6); break;
+			case 1: if (get_channel_active(9)) PORTA |= _BV(PA7); break;
 		}
 
 		next++;
@@ -142,39 +90,27 @@ void dimmer_init() {
 	for (x = 0; x < NUM_DIMMER_CHANNELS; x++) {
 		channels_sorted[x] = x;
 		dim_vals_sorted[x] = MAX_VAL;
-		channels_active[x] = 0;
 		dim_vals_8bit[x] = 255;
 	}
 
 	//set soft-PWM ports to output
-	DDRA |= _BV(PA4) | _BV(PA5);	//2x triac
-	DDRC |= _BV(PC4) | _BV(PC5);	//2x triac
-	DDRD |= _BV(PD5); // EVG: 0-10V
+	DDRA |= _BV(PA6) | _BV(PA7);
 
-	//disable all triacs
-	PORTA &= ~_BV(PA4);
-	PORTA &= ~_BV(PA5);
-	PORTC &= ~_BV(PC4);
-	PORTD &= ~_BV(PD5);
-	PORTC &= ~_BV(PC5);
+	// disable all 0-10V outputs
+	PORTA &= ~_BV(PA6);
+	PORTA &= ~_BV(PA7);
 
-	PORTD |= _BV(PD6);	//pull up an Zero-Cross-Detection-Input-Pin
+	TCCR1B |= _BV(WGM12) | _BV(CS10) | _BV(CS10); // CTC (TOP = OCR1A), clk/64
 
-	TCCR1B |= _BV(ICNC1) | _BV(WGM12) | _BV(CS12); //CTC (TOP = OCR1A), clk/256
-
-	//The output comapre A is the period of the timer.
-	//thereby it runs at exactly 100Hz and stays synchronus with the mains frequency
-	//even if an ICP pulse should be missing
-	OCR1A = 625;
-
+	OCR1A = MAX_VAL; // 500 Hz PWM
 	OCR1B = MAX_VAL;
 
-	TIMSK |= _BV(TICIE1) | _BV(OCIE1B); //Input capture int on, output compare 1B on
+	TIMSK |= _BV(OCIE1B); // Output compare 1B on
 }
 
 
 void set_dimmer(uint8_t channel, uint8_t bright) {
-	//this is the API to the dimmer module.
+	//this is the API to the dimmer module.OCR1B
 	//it calculates the dim_vals for the respective brightnes
 	//and applys the dim_max flag for channels at maximum brightnes (255)
 	// bright   dim_val   dim_max
@@ -188,11 +124,8 @@ void set_dimmer(uint8_t channel, uint8_t bright) {
 
 	dim_vals_8bit[channel] = bright;
 
-	if (channel == 3)
-	{
-		// do gamma correction on neon tube
-		bright = pgm_read_byte(exptab + bright);
-	}
+	// do gamma correction on neon tube
+	//bright = 255 - pgm_read_byte(exptab + bright);
 
 	uint16_t dimval = 512 - bright * 2;
 
@@ -205,10 +138,8 @@ void set_dimmer(uint8_t channel, uint8_t bright) {
 		//enable port if max_brightness == always on
 
 		switch (channel) {
-			case 0: if (channels_active[0]) PORTA |= _BV(PA4); break;
-			case 1: if (channels_active[1]) PORTA |= _BV(PA5); break;
-			case 2: if (channels_active[2]) PORTC |= _BV(PC4); break;
-			case 3: if (channels_active[3]) PORTD |= _BV(PD5); break;
+			case 0: if (get_channel_active(8)) PORTA |= _BV(PA6); break;
+			case 1: if (get_channel_active(9)) PORTA |= _BV(PA7); break;
 		}
 		dimval = MAX_VAL;	//no need for soft-PWM, ports are always on
 	}
@@ -257,35 +188,9 @@ void set_dimmer(uint8_t channel, uint8_t bright) {
 	update_in_progress = 0;
 }
 
-void enable_channel(uint8_t channel, uint8_t enable)
-{
-	if (channel < NUM_DIMMER_CHANNELS)
-	{
-		channels_active[channel] = enable;
-		if (enable) {
-			if (dim_max[channel])
-			{
-				switch (channel) {
-					case 0: PORTA |= _BV(PA4); break;
-					case 1: PORTA |= _BV(PA5); break;
-					case 2: PORTC |= _BV(PC4); break;
-					case 3: PORTD |= _BV(PD5); break;
-				}
-			}
-		//	if(channel == 3)
-		//		PORTC |= _BV(PC5);	//activate triac (EVG)
-		}
-		else
-			switch (channel) {
-				case 0: PORTA &= ~_BV(PA4); break;
-				case 1: PORTA &= ~_BV(PA5); break;
-				case 2: PORTC &= ~_BV(PC4); break;
-				case 3: PORTC &= ~_BV(PC5); break; //disable triac (EVG)
-			}
-	}
-}
+uint8_t get_dimmer_max(uint8_t channel) {
+	if (channel >= NUM_DIMMER_CHANNELS)
+		return 0;
 
-uint8_t get_channel_status() {
-	return channels_active[0] + (channels_active[1] << 1) + (channels_active[2] << 2) + (channels_active[3] << 3);
+	return dim_max[channel];
 }
-
