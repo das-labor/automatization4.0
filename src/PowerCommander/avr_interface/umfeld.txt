@@ -4,5 +4,5 @@ Taster küche		Taster treppe		Nacht modus
 						
 Externe Ausgänge
 labnodes lounge
-0x60 0x61
+0x60 (ehemals 0x61)
 

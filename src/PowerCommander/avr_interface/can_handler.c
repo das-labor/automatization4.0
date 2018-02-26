@@ -180,19 +180,10 @@ void can_handler()
 		{
 			// = rx_msg->data[1];
 		}*/
-		else if (rx_msg->addr_src == 0x61 && rx_msg->port_src == 0x03) { // lounge lamp 1
-			set_lounge_lamp_1(rx_msg->data[0]);
-			lamploungepwm[0] = rx_msg->data[1];
-			lamploungepwm[1] = rx_msg->data[2];
-			lamploungepwm[2] = rx_msg->data[3];
-			lamploungepwm[3] = rx_msg->data[4];
-		}
-		else if (rx_msg->addr_src == 0x60 && rx_msg->port_src == 0x03) { // lounge lamp 2
-			set_lounge_lamp_2(rx_msg->data[0]);
-			lamploungepwm[4] = rx_msg->data[1];
-			lamploungepwm[5] = rx_msg->data[2];
-			lamploungepwm[6] = rx_msg->data[3];
-			lamploungepwm[7] = rx_msg->data[4];
+		else if (rx_msg->addr_src == 0x60 && rx_msg->port_src == 0x03) { // lounge lamp
+			set_lounge_lamp(((uint16_t)rx_msg->data[1] << 8) | rx_msg->data[0]);
+			lamploungepwm[0] = rx_msg->data[2];
+			lamploungepwm[1] = rx_msg->data[3];
 		}
 		can_free(rx_msg);
 	}

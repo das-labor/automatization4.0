@@ -12,7 +12,7 @@ static void relais_control(void);
 * monitor lounge lamp status
 */
 
-uint8_t lounge_lamp_status_1, lounge_lamp_status_2;
+uint16_t lounge_lamp_status;
 
 /*
 * init lamp_matrix
@@ -20,7 +20,7 @@ uint8_t lounge_lamp_status_1, lounge_lamp_status_2;
 
 void init_lamp_control()
 {
-	lounge_lamp_status_1 = lounge_lamp_status_2 = 0;
+	lounge_lamp_status = 0;
 	{
 		can_message *msg = can_buffer_get();
 		msg->addr_src = myaddr;
@@ -31,27 +31,11 @@ void init_lamp_control()
 		msg->data[0] = 2; // get lamp status
 		can_transmit(msg);	// send packet to can_dimmer
 	}
-	{
-		can_message *msg = can_buffer_get();
-		msg->addr_src = myaddr;
-		msg->port_src = 2;
-		msg->addr_dst = 0x61;
-		msg->port_dst = 2;
-		msg->dlc = 1;
-		msg->data[0] = 2; // get lamp status
-		can_transmit(msg);	// send packet to can_dimmer
-	}
 }
 
-void set_lounge_lamp_1(uint8_t val)
+void set_lounge_lamp(uint16_t val)
 {
-	lounge_lamp_status_1 = val;
-	relais_control();
-}
-
-void set_lounge_lamp_2(uint8_t val)
-{
-	lounge_lamp_status_2 = val;
+	lounge_lamp_status = val;
 	relais_control();
 }
 
@@ -110,10 +94,10 @@ void set_lamp(uint8_t room, uint8_t index, uint8_t enable)
 			relais_control();	// update relais status, will call twi_send()
 			break;
 		case ROOM_LOUNGE:
-			/*{
+			{
 				can_message *msg = can_buffer_get();
 				msg->addr_src = myaddr;
-				msg->port_src = 2;
+				msg->port_src = 0;
 				msg->addr_dst = 0x60;
 				msg->port_dst = 2;
 				msg->dlc = 3;
@@ -122,18 +106,6 @@ void set_lamp(uint8_t room, uint8_t index, uint8_t enable)
 				msg->data[2] = enable;
 				can_transmit(msg);	// send packet to can_dimmer
 			}
-			{
-				can_message *msg = can_buffer_get();
-				msg->addr_src = myaddr;
-				msg->port_src = 2;
-				msg->addr_dst = 0x61;
-				msg->port_dst = 2;
-				msg->dlc = 3;
-				msg->data[0] = 0; // switch lamp
-				msg->data[1] = index;
-				msg->data[2] = enable;
-				can_transmit(msg);	// send packet to can_dimmer
-			}*/
 			break;
 		case ROOM_KUECHE:
 			output_set(SWL_KUECHE, enable);
@@ -158,18 +130,6 @@ void set_lamp_all(uint8_t room, uint8_t enable)
 				msg->addr_src = myaddr;
 				msg->port_src = 0;
 				msg->addr_dst = 0x60;
-				msg->port_dst = 2;
-				msg->dlc = 3;
-				msg->data[0] = 3; // switch lamp all
-				msg->data[1] = 0;
-				msg->data[2] = enable;
-				can_transmit(msg);	// send packet to can_dimmer
-			}
-			{
-				can_message *msg = can_buffer_get();
-				msg->addr_src = myaddr;
-				msg->port_src = 0;
-				msg->addr_dst = 0x61;
 				msg->port_dst = 2;
 				msg->dlc = 3;
 				msg->data[0] = 3; // switch lamp all
@@ -226,18 +186,6 @@ void set_bright(uint8_t room, uint8_t index, uint8_t value)
 				msg->data[1] = index;
 				msg->data[2] = value;
 				can_transmit(msg);	// send packet to can_dimmer
-			}
-			{
-				can_message *msg = can_buffer_get();
-				msg->addr_src = myaddr;
-				msg->port_src = 0;
-				msg->addr_dst = 0x61;
-				msg->port_dst = 2;
-				msg->dlc = 3;
-				msg->data[0] = 1; // set brightness lamp
-				msg->data[1] = index;
-				msg->data[2] = value;
-				can_transmit(msg);	// send packet to can_dimmer
 			}*/
 			break;
 		case ROOM_KUECHE:
@@ -263,18 +211,6 @@ void set_bright_all(uint8_t room, uint8_t value)
 				msg->addr_src = myaddr;
 				msg->port_src = 2;
 				msg->addr_dst = 0x60;
-				msg->port_dst = 2;
-				msg->dlc = 3;
-				msg->data[0] = 4; // set brightness lamp all
-				msg->data[1] = 0;
-				msg->data[2] = value;
-				can_transmit(msg);	// send packet to can_dimmer
-			}
-			{
-				can_message *msg = can_buffer_get();
-				msg->addr_src = myaddr;
-				msg->port_src = 2;
-				msg->addr_dst = 0x61;
 				msg->port_dst = 2;
 				msg->dlc = 3;
 				msg->data[0] = 4; // set brightness lamp all
@@ -348,7 +284,7 @@ uint8_t get_output_status(void)
 
 static void relais_control(void)
 {
-	if (lounge_lamp_status_1 || lounge_lamp_status_2) // one or more lamps in lounge are on
+	if (lounge_lamp_status) // one or more lamps in lounge are on
 		outputdata.ports |= _BV(SWL_LOUNGE);
 	else
 		outputdata.ports &= ~_BV(SWL_LOUNGE);

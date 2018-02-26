@@ -131,7 +131,7 @@ static void get_inputs(void) {
 	}
 }
 
-uint8_t lamploungepwm[8];
+uint8_t lamploungepwm[2];
 
 typedef struct {
 	uint8_t raum;
@@ -204,8 +204,17 @@ static void lamp_dim(taster_strukt *tst) {
 }
 
 static void toggle_raum_licht(taster_strukt *tst) {
-    /* toggle all lamps by current relais status */
-	set_lamp_all((tst->s_raum)->raum, ((outputdata.ports >> (tst->s_raum)->sw_funktion) & 0x01) ^ 1);
+	/* toggle all lamps by current relais status */
+	switch ((tst->s_raum)->raum)
+	{
+		case ROOM_LOUNGE:
+		set_lamp(ROOM_LOUNGE, 8, ((outputdata.ports >> (tst->s_raum)->sw_funktion) & 0x01) ^ 1);
+		set_lamp(ROOM_LOUNGE, 8, ((outputdata.ports >> (tst->s_raum)->sw_funktion) & 0x01) ^ 1);
+		break;
+
+		default:
+		set_lamp_all((tst->s_raum)->raum, ((outputdata.ports >> (tst->s_raum)->sw_funktion) & 0x01) ^ 1);
+	}
 }
 
 
@@ -214,7 +223,7 @@ static void toggle_raum_licht(taster_strukt *tst) {
 #define NUM_TASTER 2
 
 static raum_strukt r_vortrag = {ROOM_VORTRAG, 4, SWL_VORTRAG, outputdata.pwmval};
-static raum_strukt r_lounge  = {ROOM_LOUNGE, 8, SWL_LOUNGE, lamploungepwm};
+static raum_strukt r_lounge  = {ROOM_LOUNGE, 2, SWL_LOUNGE, lamploungepwm};
 static raum_strukt r_kueche  = {ROOM_KUECHE, 1, SWL_KUECHE, &outputdata.pwmval[5]};
 
 static taster_strukt taster[3] = {{0, 0, 0, &r_vortrag}, {0, 0, 0, &r_lounge}, {0, 0, 0, &r_kueche}};
