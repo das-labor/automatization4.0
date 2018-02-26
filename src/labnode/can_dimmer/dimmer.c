@@ -6,7 +6,7 @@
 #include "channel.h"
 #include "dimmer.h"
 
-#define MAX_VAL 520
+#define MAX_VAL 512
 
 volatile uint8_t update_in_progress;
 uint8_t dim_max[NUM_DIMMER_CHANNELS];
@@ -64,8 +64,8 @@ ISR(TIMER1_COMPB_vect) {
 		//since the dim_vals are sorted, we need to find out the channel,
 		//for which this one is, and set its output.
 		switch (channels[next]) {
-			case 0: if (get_channel_active(0)) PORTA |= _BV(PA6); break;
-			case 1: if (get_channel_active(1)) PORTA |= _BV(PA7); break;
+			case 0: if (get_channel_active(8)) PORTA |= _BV(PA6); break;
+			case 1: if (get_channel_active(9)) PORTA |= _BV(PA7); break;
 		}
 
 		next++;
@@ -100,9 +100,10 @@ void dimmer_init() {
 	PORTA &= ~_BV(PA6);
 	PORTA &= ~_BV(PA7);
 
-	TCCR1B |= _BV(WGM12) | _BV(CS11); // CTC (TOP = OCR1A), clk/8
+	TCCR1B |= _BV(WGM12) | _BV(CS10) | _BV(CS10); // CTC (TOP = OCR1A), clk/64
 
-	OCR1A = MAX_VAL; // 3.8 kHz PWM
+	OCR1A = MAX_VAL; // 500 Hz PWM
+	OCR1B = MAX_VAL;
 
 	TIMSK |= _BV(OCIE1B); // Output compare 1B on
 }
@@ -123,11 +124,8 @@ void set_dimmer(uint8_t channel, uint8_t bright) {
 
 	dim_vals_8bit[channel] = bright;
 
-	if (channel == 3)
-	{
-		// do gamma correction on neon tube
-		bright = pgm_read_byte(exptab + bright);
-	}
+	// do gamma correction on neon tube
+	//bright = 255 - pgm_read_byte(exptab + bright);
 
 	uint16_t dimval = 512 - bright * 2;
 
@@ -140,8 +138,8 @@ void set_dimmer(uint8_t channel, uint8_t bright) {
 		//enable port if max_brightness == always on
 
 		switch (channel) {
-			case 0: if (get_channel_active(0)) PORTA |= _BV(PA6); break;
-			case 1: if (get_channel_active(1)) PORTA |= _BV(PA7); break;
+			case 0: if (get_channel_active(8)) PORTA |= _BV(PA6); break;
+			case 1: if (get_channel_active(9)) PORTA |= _BV(PA7); break;
 		}
 		dimval = MAX_VAL;	//no need for soft-PWM, ports are always on
 	}

@@ -127,10 +127,11 @@ void can_send_status()
 	msg->port_src = 0x03;
 	msg->addr_dst = 0x00;
 	msg->port_dst = 0x00;
-	msg->dlc = 3;
+	msg->dlc = 4;
 	msg->data[0] = (uint8_t) get_channel_status();
-	msg->data[1] = dim_vals_8bit[0];
-	msg->data[2] = dim_vals_8bit[1];
+	msg->data[1] = (uint8_t) (get_channel_status() >> 8);
+	msg->data[2] = dim_vals_8bit[0];
+	msg->data[3] = dim_vals_8bit[1];
 	can_transmit(msg);
 }
 

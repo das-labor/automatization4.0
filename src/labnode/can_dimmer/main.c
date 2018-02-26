@@ -26,7 +26,7 @@ static void init(void)
 
 	//init pcf8574
 	pcf8574_init();
-	pcf8574_setoutput(0, 0);
+	pcf8574_setoutput(0, 0xFF);
 
 	//enable all channels, set maximum brightness
 	set_dimmer(0, 127);

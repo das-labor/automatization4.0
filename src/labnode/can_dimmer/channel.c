@@ -39,7 +39,7 @@ void enable_channel(uint8_t channel, uint8_t enable)
 		}
 		else
 		{
-			pcf8574_setoutputpin(0, channel - NUM_DIMMER_CHANNELS, enable);
+			pcf8574_setoutputpin(0, 7 - (channel - NUM_DIMMER_CHANNELS), enable ? 0 : 1);
 		}
 	}
 }
