@@ -66,9 +66,6 @@ static void output_set(uint8_t output, uint8_t enable)
 
 void set_lamp(uint8_t room, uint8_t index, uint8_t enable)
 {
-	if (index > 7)
-		return;
-
 	switch (room) {
 		case ROOM_VORTRAG:
 			switch (index) { // SWL_TAFEL
