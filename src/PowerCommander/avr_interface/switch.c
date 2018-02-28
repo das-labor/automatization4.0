@@ -209,7 +209,7 @@ static void toggle_raum_licht(taster_strukt *tst) {
 	{
 		case ROOM_LOUNGE:
 		set_lamp(ROOM_LOUNGE, 8, ((outputdata.ports >> (tst->s_raum)->sw_funktion) & 0x01) ^ 1);
-		set_lamp(ROOM_LOUNGE, 8, ((outputdata.ports >> (tst->s_raum)->sw_funktion) & 0x01) ^ 1);
+		set_lamp(ROOM_LOUNGE, 9, ((outputdata.ports >> (tst->s_raum)->sw_funktion) & 0x01) ^ 1);
 		break;
 
 		default:
