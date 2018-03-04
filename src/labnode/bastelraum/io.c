@@ -166,7 +166,7 @@ void switch_handler()
 			set_pwm(F_PWM_FENSTER, 200);
 			set_pwm(F_PWM_MITTE, 200);
 			set_pwm(F_PWM_NISCHE, 200);
-			set_output_all(_BV(F_REG_BTISCHR_2) | _BV(F_REG_BTISCHL_2) | _BV(F_REG_MITTE) | _BV(F_REG_NISCHE));
+			set_output_all(_BV(F_REG_BTISCHR_2) | _BV(F_REG_BTISCHL_1) | _BV(F_REG_FENSTER) | _BV(F_REG_MITTE) | _BV(F_REG_NISCHE));
 		}
 	}
 	if (held)

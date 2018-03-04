@@ -43,6 +43,7 @@
 	#define UCSRA UCSR0A
 	#define UDRIE UDRIE0
 	#define UCSZ0 UCSZ00
+	#define UCSZ1 UCSZ01
 	#define RXCIE RXCIE0
 	#define TXCIE TXCIE0
 	#define RXC RXC0
