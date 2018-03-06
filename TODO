@@ -13,7 +13,9 @@
   - Vortragsraum
     - Teufel I2C vernünftig debuggen oder einfach wieder IR nehmen
     - Beamer Control testen
-    - Jan hat 5x Adg508f, daraus eine Analog-Audiomatrix für mehrere Eingänge bauen (HDMI-Frontkanäle / Klinke vorn / Server / min. 1 Kanal Spare) auf die Frontkanäle vom Teufel
+    - eine Analog-Audiomatrix für mehrere Eingänge bauen (HDMI-Frontkanäle / Klinke vorn / Server / min. 1 Kanal Spare) auf die Frontkanäle vom Teufel
+      - Dr4go hat was, was er mitbringen kann, aber noch nicht stabil läuft
+      - sonst: Jan hat 5x Adg508f
     - Ein vernünftiges Bedienfeld für den Vortragstisch bauen (u.a. Knöpfe und Regler für Audio, Beamer, Licht)
 
 
