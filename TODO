@@ -1,7 +1,5 @@
-- can_dimmer (lounge) auf 0-10V Betrieb umrüsten für die Leuchtstofflampen und Spots nur schaltbar
-  - 0-10V Schaltung (@607nm)
-  - src (Endres)
-  - weblab
+- Bastelraum und Lounge
+  - neue LabnodeIO-XL Platine machen und verwenden für besseres 0-10V dimmen
 - Laufschriftborg Text hinschicken
   - weblab
 - anderen aktiven Code sammeln
@@ -12,3 +10,16 @@
   - Streaming, ...
   - Klingel
   - Aufräumalarm randomisieren
+  - Vortragsraum
+    - Teufel I2C vernünftig debuggen oder einfach wieder IR nehmen
+    - Beamer Control testen
+    - Jan hat 5x Adg508f, daraus eine Analog-Audiomatrix für mehrere Eingänge bauen (HDMI-Frontkanäle / Klinke vorn / Server / min. 1 Kanal Spare) auf die Frontkanäle vom Teufel
+    - Ein vernünftiges Bedienfeld für den Vortragstisch bauen (u.a. Knöpfe und Regler für Audio, Beamer, Licht)
+
+
+
+== Done ==
+- can_dimmer (lounge) auf 0-10V Betrieb umrüsten für die Leuchtstofflampen und Spots nur schaltbar
+  - 0-10V Schaltung (@607nm)
+  - src (Endres)
+  - weblab
